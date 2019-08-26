@@ -43,6 +43,8 @@ export class CanvasComponent implements OnInit {
     zoom: 10
   };
 
+  canvas: HTMLElement;
+
   getViewArea(): ViewArea {
     return {
       vtl: { vx: -this.viewWidth / 2, vy: -this.viewHeight / 2 },
@@ -68,8 +70,8 @@ export class CanvasComponent implements OnInit {
   }
 
   toMap(v: ViewCoord, view: Projection): MapCoord {
-    const x = v.vx / view.zoom + view.center.x;
-    const y = v.vx / view.zoom + view.center.x;
+    const x = Math.floor(v.vx / view.zoom + view.center.x);
+    const y = Math.floor(v.vx / view.zoom + view.center.x);
     return { x, y };
   }
 
@@ -81,7 +83,18 @@ export class CanvasComponent implements OnInit {
     };
   }
 
+
+  draw() {
+    const f = document.createElement('div');
+    f.className = 'field';
+
+    this.canvas.appendChild( f );
+  }
+
   ngOnInit() {
+    this.canvas = document.getElementById('canvas');
+
+    this.draw();
   }
 
   getVisibleRows() {
