@@ -40,16 +40,17 @@ export class CanvasComponent implements OnInit {
 
   viewHeight = 300;
   viewWidth = 300;
-  zoom = 10;
+
+  fieldSize = 20;
 
   view: Projection = {
     center: { x: 0, y: 0 },
-    zoom: 10
+    zoom: 1
   };
 
   canvas: HTMLElement;
 
-  currentArea: MapArea = {
+  previousArea: MapArea = {
     tl: {x: 0, y: 0},
     br: {x: 0, y: 0}
   };
@@ -57,7 +58,7 @@ export class CanvasComponent implements OnInit {
   getViewArea(): ViewArea {
     return {
       vtl: { vx: -this.viewWidth / 2, vy: -this.viewHeight / 2 },
-      vbr: { vx: -this.viewWidth / 2, vy: -this.viewHeight / 2 }
+      vbr: { vx: +this.viewWidth / 2, vy: +this.viewHeight / 2 }
     };
   }
 
@@ -73,14 +74,14 @@ export class CanvasComponent implements OnInit {
   }
 
   toView(m: MapCoord, view: Projection): ViewCoord {
-    const vx = (m.x - view.center.x) * view.zoom;
-    const vy = (m.y - view.center.y) * view.zoom;
+    const vx = (m.x - view.center.x) * this.fieldSize;
+    const vy = (m.y - view.center.y) * this.fieldSize;
     return { vx, vy };
   }
 
   toMap(v: ViewCoord, view: Projection): MapCoord {
-    const x = Math.floor(v.vx / view.zoom + view.center.x);
-    const y = Math.floor(v.vx / view.zoom + view.center.x);
+    const x = Math.floor(v.vx / this.fieldSize + view.center.x);
+    const y = Math.floor(v.vx / this.fieldSize + view.center.x);
     return { x, y };
   }
 
@@ -92,6 +93,9 @@ export class CanvasComponent implements OnInit {
     };
   }
 
+  getVerticalInterval( area: MapArea): MapInterval {
+    return { start: area.tl.y, end: area.br.y };
+  }
   updateInterval( current: MapInterval, previous: MapInterval, container: HTMLElement, elementFactory: (index: number) => HTMLElement) {
 
     // remove elements
@@ -120,16 +124,27 @@ export class CanvasComponent implements OnInit {
     }
   }
 
+  createRow = ( rowIndex: number): HTMLElement => {
+    const e = document.createElement('div');
+    e.append('' + rowIndex);
+    e.classList.add('field');
+    const x = this.viewWidth / 2;
+    const y = this.viewHeight / 2 + rowIndex * this.fieldSize;
+    e.style.left = `${x}px`;
+    e.style.top = `${y}px`;
+    e.style.width = `${this.fieldSize}px`;
+    e.style.height = `${this.fieldSize}px`;
+    return e;
+  }
+
   draw() {
-    const f = document.createElement('div');
-    f.className = 'field';
-
-    this.canvas.appendChild( f );
-
     const mapArea = this.getMapArea();
+    const currentRows = this.getVerticalInterval(mapArea);
+    const previousRows = this.getVerticalInterval(this.previousArea);
 
+    this.updateInterval( currentRows, previousRows, this.canvas, this.createRow );
 
-
+    this.previousArea = mapArea;
   }
 
   ngOnInit() {
