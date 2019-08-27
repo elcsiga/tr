@@ -23,6 +23,10 @@ interface ViewArea {
   vtl: ViewCoord;
   vbr: ViewCoord;
 }
+interface MapInterval {
+  start: number;
+  end: number;
+}
 
 @Component({
   selector: 'app-canvas',
@@ -44,6 +48,11 @@ export class CanvasComponent implements OnInit {
   };
 
   canvas: HTMLElement;
+
+  currentArea: MapArea = {
+    tl: {x: 0, y: 0},
+    br: {x: 0, y: 0}
+  };
 
   getViewArea(): ViewArea {
     return {
@@ -83,12 +92,44 @@ export class CanvasComponent implements OnInit {
     };
   }
 
+  updateInterval( current: MapInterval, previous: MapInterval, container: HTMLElement, elementFactory: (index: number) => HTMLElement) {
+
+    // remove elements
+    for (let i = previous.end - current.end; i > 0; i--) {
+      container.children.item(i).remove();
+    }
+    for (let i = 0; i < current.start - previous.start; i++) {
+      container.children.item(i).remove();
+    }
+
+    // add elements
+    if (current.start < previous.start) {
+      const elements: HTMLElement[] = [];
+      for (let c = current.start; c < previous.start; c++) {
+        elements.push( elementFactory(c) );
+      }
+      container.prepend(...elements);
+    }
+
+    if (current.end > previous.end) {
+      const elements: HTMLElement[] = [];
+      for (let c = previous.end; c < current.end; c++) {
+        elements.push( elementFactory(c) );
+      }
+      container.append(...elements);
+    }
+  }
 
   draw() {
     const f = document.createElement('div');
     f.className = 'field';
 
     this.canvas.appendChild( f );
+
+    const mapArea = this.getMapArea();
+
+
+
   }
 
   ngOnInit() {
